@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 public class FullTextSearchTest {
-
     private static IAerospikeClient aerospikeClient;
     private static final String NAMESPACE = "test";
     private static final String SET = "docs";
@@ -51,15 +50,13 @@ public class FullTextSearchTest {
     @Test
     void testFullTextIndexAndSearch() throws Exception {
         try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
-            // Build in-memory full-text index
             search.createFullTextIndex(NAMESPACE, SET);
 
-            // Search for something that should match doc2
+            // Search for the record that contains the word "Lucene"
             List<Record> results = search.searchText(NAMESPACE, SET, "Lucene", 10);
 
-            // Print and verify
             results.forEach(System.out::println);
-            Assertions.assertFalse(results.isEmpty(), "Expected at least one result");
+            Assertions.assertEquals(2, results.size());
         }
     }
 
@@ -67,76 +64,66 @@ public class FullTextSearchTest {
     void testHighLimit() throws Exception {
         AerospikeSearch search = new AerospikeSearch(aerospikeClient);
 
-        // Build in-memory full-text index
         search.createFullTextIndex(NAMESPACE, SET);
 
         // High limit should throw an exception
-        Assertions.assertThrows(IllegalArgumentException.class, () -> search.searchText(NAMESPACE, SET, "Lucene", 1000));
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> search.searchText(NAMESPACE, SET, "Lucene", 1000));
     }
 
     @Test
     void testFullTextFuzzySearch() throws Exception {
         try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
-            // Build the index
-            search.createFullTextIndex(NAMESPACE, SET);
-
-            // Insert some data
-            Key key1 = new Key(NAMESPACE, SET, "doc1");
-            Bin bin1 = new Bin("text", "Lucene search is powerful");
-            aerospikeClient.put(null, key1, bin1);
-
-            Key key2 = new Key(NAMESPACE, SET, "doc2");
-            Bin bin2 = new Bin("text", "Lusene rocks!");
-            aerospikeClient.put(null, key2, bin2);
-
-            // Rebuild or update index after inserts
             search.createFullTextIndex(NAMESPACE, SET);
 
             // Perform fuzzy search — simulate a misspelling of "Lucene"
             List<Record> results = search.searchText(NAMESPACE, SET, "Lusene~1", 10);
 
-            results.forEach(System.out::println);
-
             // Verify fuzzy match returns at least one doc
-            Assertions.assertFalse(results.isEmpty(), "Expected fuzzy match for 'Lusene~1'");
+            results.forEach(System.out::println);
+            Assertions.assertEquals(2, results.size());
         }
     }
 
     @Test
     void testMultipleFullTextIndexesAndSearches_DisjointTerms() throws Exception {
-        final String SET_USERS = "users";
-        final String SET_PRODUCTS = "products";
+        final String usersSet = "users";
+        final String productsSet = "products";
 
         try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
-            // --- Prepare test data (disjoint terms) ---
-            // Users set -> only mentions "Lucene"
-            aerospikeClient.put(null, new Key(NAMESPACE, SET_USERS, "user1"),
+            // Users set - only mentions "Lucene"
+            aerospikeClient.put(null, new Key(NAMESPACE, usersSet, "user1"),
                     new Bin("bio", "Lucene expert and search engineer"));
-            aerospikeClient.put(null, new Key(NAMESPACE, SET_USERS, "user2"),
+            aerospikeClient.put(null, new Key(NAMESPACE, usersSet, "user2"),
                     new Bin("bio", "Lucene tutorials and indexing tricks"));
+            aerospikeClient.put(null, new Key(NAMESPACE, usersSet, "user3"),
+                    new Bin("bio", "Check out this Lucene document"));
 
-            // Products set -> only mentions "Aerospike"
-            aerospikeClient.put(null, new Key(NAMESPACE, SET_PRODUCTS, "prod1"),
+            // Products set - only mentions "Aerospike"
+            aerospikeClient.put(null, new Key(NAMESPACE, productsSet, "prod1"),
                     new Bin("description", "High-performance Aerospike SSD server"));
-            aerospikeClient.put(null, new Key(NAMESPACE, SET_PRODUCTS, "prod2"),
+            aerospikeClient.put(null, new Key(NAMESPACE, productsSet, "prod2"),
                     new Bin("description", "Enterprise-grade Aerospike appliance"));
+            aerospikeClient.put(null, new Key(NAMESPACE, productsSet, "prod3"),
+                    new Bin("description", "Aerospike is a real-time database"));
+            aerospikeClient.put(null, new Key(NAMESPACE, productsSet, "prod4"),
+                    new Bin("description", "NoSQL Databases: MongoDB, Aerospike and Redis"));
 
-            // --- Build both indexes ---
-            search.createFullTextIndex(NAMESPACE, SET_USERS);
-            search.createFullTextIndex(NAMESPACE, SET_PRODUCTS);
+            search.createFullTextIndex(NAMESPACE, usersSet);
+            search.createFullTextIndex(NAMESPACE, productsSet);
 
-            // --- Queries that should hit only within their own set ---
-            List<Record> usersLucene = search.searchText(NAMESPACE, SET_USERS, "Lucene", 10);
-            Assertions.assertFalse(usersLucene.isEmpty(), "Expected Lucene match in users index");
+            // Queries that should hit only within their own set
+            List<Record> usersLucene = search.searchText(NAMESPACE, usersSet, "Lucene", 10);
+            Assertions.assertEquals(3, usersLucene.size());
 
-            List<Record> productsAerospike = search.searchText(NAMESPACE, SET_PRODUCTS, "Aerospike", 10);
-            Assertions.assertFalse(productsAerospike.isEmpty(), "Expected Aerospike match in products index");
+            List<Record> productsAerospike = search.searchText(NAMESPACE, productsSet, "Aerospike", 10);
+            Assertions.assertEquals(4, productsAerospike.size());
 
-            // --- Cross-checks: should return no results because terms are disjoint ---
-            List<Record> usersAerospike = search.searchText(NAMESPACE, SET_USERS, "Aerospike", 10);
+            // Cross-checks: should return no results because terms are disjoint ---
+            List<Record> usersAerospike = search.searchText(NAMESPACE, usersSet, "Aerospike", 10);
             Assertions.assertTrue(usersAerospike.isEmpty(), "Expected no Aerospike match in users index");
 
-            List<Record> productsLucene = search.searchText(NAMESPACE, SET_PRODUCTS, "Lucene", 10);
+            List<Record> productsLucene = search.searchText(NAMESPACE, productsSet, "Lucene", 10);
             Assertions.assertTrue(productsLucene.isEmpty(), "Expected no Lucene match in products index");
         }
     }
