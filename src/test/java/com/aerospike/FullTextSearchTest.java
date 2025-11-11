@@ -1,6 +1,10 @@
 package com.aerospike;
 
-import com.aerospike.client.*;
+import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.IAerospikeClient;
+import com.aerospike.client.Key;
+import com.aerospike.client.Bin;
+import com.aerospike.client.Record;
 import com.aerospike.client.policy.WritePolicy;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
