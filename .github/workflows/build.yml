@@ -15,12 +15,6 @@ jobs:
         image: aerospike/aerospike-server:latest
         ports:
           - 3000:3000
-        # Wait until Aerospike is ready before running tests
-        options: >-
-          --health-cmd "aql -h localhost -c 'show namespaces'" 
-          --health-interval=5s 
-          --health-timeout=5s 
-          --health-retries=10
 
     steps:
       - uses: actions/checkout@v4
