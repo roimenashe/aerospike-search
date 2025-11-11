@@ -119,7 +119,7 @@ public class FullTextSearchTest {
             List<Record> productsAerospike = search.searchText(NAMESPACE, productsSet, "Aerospike", 10);
             Assertions.assertEquals(4, productsAerospike.size());
 
-            // Cross-checks: should return no results because terms are disjoint ---
+            // Cross-checks: should return no results because terms are disjoint
             List<Record> usersAerospike = search.searchText(NAMESPACE, usersSet, "Aerospike", 10);
             Assertions.assertTrue(usersAerospike.isEmpty(), "Expected no Aerospike match in users index");
 
