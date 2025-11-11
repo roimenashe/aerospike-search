@@ -10,14 +10,20 @@ import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.*;
+import org.apache.lucene.index.VectorSimilarityFunction;
 
 import java.io.IOException;
 import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
-public class FullTextIndexer implements AutoCloseable {
+/**
+ * Builds and manages Lucene vector indexes for Aerospike sets.
+ * Each (namespace:set) pair gets its own in-memory vector index.
+ */
+public class VectorIndexer implements AutoCloseable {
 
     private final AerospikeConnection aerospikeConnection;
     private final Analyzer analyzer;
@@ -25,16 +31,17 @@ public class FullTextIndexer implements AutoCloseable {
     private final Map<String, IndexWriter> writers = new ConcurrentHashMap<>();
     private final Map<String, IndexSearcher> searchers = new ConcurrentHashMap<>();
 
-    public FullTextIndexer(AerospikeConnection aerospikeConnection) {
+    public VectorIndexer(AerospikeConnection aerospikeConnection) {
         this.aerospikeConnection = aerospikeConnection;
         this.analyzer = new StandardAnalyzer();
     }
 
     /**
-     * Builds or rebuilds an in-memory full-text index for a given namespace + set.
-     * Each namespace+set combination gets its own isolated Lucene index.
+     * Scans Aerospike records, computes vector embeddings via the supplied embedder,
+     * and builds an in-memory Lucene vector index.
      */
-    public void createFullTextIndex(String namespace, String set) throws Exception {
+    public void createVectorIndex(String namespace, String set,
+                                  Function<Record, float[]> embedder) throws Exception {
         String key = IndexUtil.getUniqueIndexName(namespace, set);
 
         Directory directory = directories.computeIfAbsent(key, k -> new ByteBuffersDirectory());
@@ -46,20 +53,24 @@ public class FullTextIndexer implements AutoCloseable {
             }
         });
 
-        writer.deleteAll(); // clear old documents
+        writer.deleteAll(); // clear any previous index
         AtomicLong count = new AtomicLong();
 
         aerospikeConnection.scan(namespace, set, (Key akey, Record record) -> {
             Document doc = new Document();
+
+            // Encode Aerospike digest as unique ID
             String encodedId = Base64.getEncoder().encodeToString(akey.digest);
             doc.add(new StringField("id", encodedId, Field.Store.YES));
 
-            record.bins.forEach((binName, value) -> {
-                String text = record.getString(binName);
-                if (text != null && !text.isEmpty()) {
-                    doc.add(new TextField(binName, text, Field.Store.YES));
-                }
-            });
+            // Generate vector embedding for this record
+            float[] vector = embedder.apply(record);
+            if (vector == null) {
+                return; // skip records without embeddings
+            }
+
+            // Add vector field
+            doc.add(new KnnFloatVectorField("vector", vector, VectorSimilarityFunction.DOT_PRODUCT));
 
             synchronized (writer) {
                 try {
@@ -76,15 +87,11 @@ public class FullTextIndexer implements AutoCloseable {
         IndexSearcher searcher = new IndexSearcher(reader);
         searchers.put(key, searcher);
 
-        System.out.printf("Indexed %d records for [%s:%s]%n", count.get(), namespace, set);
+        System.out.printf("Vector-indexed %d records for [%s:%s]%n", count.get(), namespace, set);
     }
 
     public IndexSearcher getIndexSearcher(String namespace, String set) {
         return searchers.get(IndexUtil.getUniqueIndexName(namespace, set));
-    }
-
-    public Analyzer getAnalyzer() {
-        return analyzer;
     }
 
     @Override
