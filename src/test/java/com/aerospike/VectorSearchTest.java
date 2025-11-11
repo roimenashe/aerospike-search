@@ -49,21 +49,8 @@ public class VectorSearchTest {
     @Test
     void testVectorIndexAndSearch() throws Exception {
         try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
-            // Simple deterministic embedding generator
-            Function<Record, float[]> embedder = record -> {
-                String text = record.getString("title") + " " + record.getString("body");
-                text = text.toLowerCase();
-
-                float lucene = text.contains("lucene") ? 1f : 0f;
-                float aerospike = text.contains("aerospike") ? 1f : 0f;
-                float searchWord = text.contains("search") ? 1f : 0f;
-
-                // 3D toy vector embedding
-                return new float[]{lucene, aerospike, searchWord};
-            };
-
             // Build vector index from Aerospike data
-            search.createVectorIndex(NAMESPACE, SET, embedder);
+            search.createVectorIndex(NAMESPACE, SET, getEmbedder());
 
             // Query vector representing "Lucene search"
             float[] queryVector = new float[]{1f, 0f, 1f};
@@ -83,5 +70,31 @@ public class VectorSearchTest {
 
             Assertions.assertTrue(hasLuceneMatch, "Expected Lucene-related record in results");
         }
+    }
+
+    @Test
+    void testTooLargeK() throws Exception {
+        AerospikeSearch search = new AerospikeSearch(aerospikeClient);
+
+        search.createVectorIndex(NAMESPACE, SET, getEmbedder());
+
+        // Large K should throw an exception
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> search.searchVector(NAMESPACE, SET, new float[]{1f, 0f, 1f}, 1000));
+    }
+
+    // Simple deterministic embedding generator
+    private Function<Record, float[]> getEmbedder() {
+        return record -> {
+            String text = record.getString("title") + " " + record.getString("body");
+            text = text.toLowerCase();
+
+            float lucene = text.contains("lucene") ? 1f : 0f;
+            float aerospike = text.contains("aerospike") ? 1f : 0f;
+            float searchWord = text.contains("search") ? 1f : 0f;
+
+            // 3D toy vector embedding
+            return new float[]{lucene, aerospike, searchWord};
+        };
     }
 }
