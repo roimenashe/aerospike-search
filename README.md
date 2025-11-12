@@ -45,8 +45,8 @@ try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
     search.createFullTextIndex("namespace1", "set1");
     search.createVectorIndexFromBin("namespace1", "set1", "vectorBin1");
 
-float[] queryVector = new float[]{1f, 0f, 1f};
-List<Record> results = search.searchHybrid("namespace1", "set1", "Lucene", queryVector, 10, 0.6, 0.4);
+    float[] queryVector = new float[]{1f, 0f, 1f};
+    List<Record> results = search.searchHybrid("namespace1", "set1", "Lucene", queryVector, 10, 0.6, 0.4);
 }
 ```
 

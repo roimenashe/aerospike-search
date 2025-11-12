@@ -4,7 +4,6 @@ import com.aerospike.client.*;
 import com.aerospike.client.Record;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.ScanPolicy;
-import com.aerospike.client.query.Statement;
 
 import java.util.ArrayList;
 import java.util.Base64;
