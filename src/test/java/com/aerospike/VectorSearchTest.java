@@ -6,9 +6,11 @@ import com.aerospike.client.Key;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Record;
 import com.aerospike.client.policy.WritePolicy;
+import com.aerospike.model.IndexType;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 public class VectorSearchTest {
@@ -96,5 +98,20 @@ public class VectorSearchTest {
             // 3D toy vector embedding
             return new float[]{lucene, aerospike, searchWord};
         };
+    }
+
+    @Test
+    void testListVectorIndexes() throws Exception {
+        try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
+            search.createVectorIndex(NAMESPACE, SET, getEmbedder());
+            search.createVectorIndex(NAMESPACE, "set2", getEmbedder());
+            search.createVectorIndex(NAMESPACE, "set3", getEmbedder());
+
+            Map<String, IndexType> indexes = search.listIndexes();
+
+            // Exactly 3 full-text indexes
+            Assertions.assertEquals(3, indexes.size());
+            indexes.forEach((s, indexType) -> Assertions.assertEquals(IndexType.VECTOR, indexType));
+        }
     }
 }

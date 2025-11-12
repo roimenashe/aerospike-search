@@ -4,11 +4,14 @@ import com.aerospike.client.IAerospikeClient;
 import com.aerospike.client.Record;
 import com.aerospike.index.FullTextIndexer;
 import com.aerospike.index.VectorIndexer;
+import com.aerospike.model.IndexType;
 import com.aerospike.search.FullTextSearchService;
 import com.aerospike.search.VectorSearchService;
 import com.aerospike.storage.AerospikeConnection;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 public class AerospikeSearch implements AutoCloseable {
@@ -39,6 +42,13 @@ public class AerospikeSearch implements AutoCloseable {
      */
     public void createVectorIndex(String namespace, String set, Function<Record, float[]> embedder) throws Exception {
         vectorIndexer.createVectorIndex(namespace, set, embedder);
+    }
+
+    public Map<String, IndexType> listIndexes() {
+        Map<String, IndexType> indexes = new HashMap<>();
+        fullTextIndexer.listFullTextIndexes().forEach(index -> indexes.put(index, IndexType.FULL_TEXT));
+        vectorIndexer.listVectorIndexes().forEach(index -> indexes.put(index, IndexType.VECTOR));
+        return indexes;
     }
 
     /**

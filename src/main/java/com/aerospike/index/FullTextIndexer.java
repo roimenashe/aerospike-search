@@ -14,6 +14,7 @@ import org.apache.lucene.store.*;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -77,6 +78,10 @@ public class FullTextIndexer implements AutoCloseable {
         searchers.put(key, searcher);
 
         System.out.printf("Indexed %d records for [%s:%s]%n", count.get(), namespace, set);
+    }
+
+    public Set<String> listFullTextIndexes() {
+        return directories.keySet();
     }
 
     public IndexSearcher getIndexSearcher(String namespace, String set) {

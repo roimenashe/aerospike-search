@@ -6,12 +6,14 @@ import com.aerospike.client.Key;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Record;
 import com.aerospike.client.policy.WritePolicy;
+import com.aerospike.model.IndexType;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 public class FullTextSearchTest {
     private static IAerospikeClient aerospikeClient;
@@ -125,6 +127,21 @@ public class FullTextSearchTest {
 
             List<Record> productsLucene = search.searchText(NAMESPACE, productsSet, "Lucene", 10);
             Assertions.assertTrue(productsLucene.isEmpty(), "Expected no Lucene match in products index");
+        }
+    }
+
+    @Test
+    void testListFullTextIndexes() throws Exception {
+        try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
+            search.createFullTextIndex(NAMESPACE, SET);
+            search.createFullTextIndex(NAMESPACE, "set2");
+            search.createFullTextIndex(NAMESPACE, "set3");
+
+            Map<String, IndexType> indexes = search.listIndexes();
+
+            // Exactly 3 full-text indexes
+            Assertions.assertEquals(3, indexes.size());
+            indexes.forEach((s, indexType) -> Assertions.assertEquals(IndexType.FULL_TEXT, indexType));
         }
     }
 }
