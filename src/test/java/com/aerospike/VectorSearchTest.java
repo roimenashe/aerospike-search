@@ -11,7 +11,36 @@ import java.util.function.Function;
 public class VectorSearchTest extends BaseTest {
 
     @Test
-    void testVectorIndexAndSearch() throws Exception {
+    void testVectorIndexFromBinAndSearch() throws Exception {
+        String vectorBin = "vectorBin";
+
+        try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
+            // Build vector index directly from Aerospike bin
+            search.createVectorIndex(NAMESPACE, SET, vectorBin);
+
+            // Query vector representing "Lucene search"
+            float[] queryVector = new float[]{1f, 0f, 1f};
+
+            // Perform vector search (top 2 results)
+            List<Record> results = search.searchVector(NAMESPACE, SET, queryVector, 2);
+
+            results.forEach(System.out::println);
+
+            // Expect top 2 Lucene-related results
+            Assertions.assertEquals(2, results.size());
+
+            boolean hasLuceneMatch = results.stream()
+                    .anyMatch(r -> {
+                        String title = r.getString("title").toLowerCase();
+                        return title.contains("lucene");
+                    });
+
+            Assertions.assertTrue(hasLuceneMatch, "Expected Lucene-related record in results");
+        }
+    }
+
+    @Test
+    void testVectorIndexWithEmbeddingFunctionAndSearch() throws Exception {
         try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
             // Build vector index from Aerospike data
             search.createVectorIndex(NAMESPACE, SET, getEmbedder());
@@ -36,17 +65,6 @@ public class VectorSearchTest extends BaseTest {
         }
     }
 
-    @Test
-    void testTooLargeK() throws Exception {
-        AerospikeSearch search = new AerospikeSearch(aerospikeClient);
-
-        search.createVectorIndex(NAMESPACE, SET, getEmbedder());
-
-        // Large K should throw an exception
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> search.searchVector(NAMESPACE, SET, new float[]{1f, 0f, 1f}, 1000));
-    }
-
     // Simple deterministic embedding generator
     private Function<Record, float[]> getEmbedder() {
         return record -> {
@@ -63,11 +81,22 @@ public class VectorSearchTest extends BaseTest {
     }
 
     @Test
+    void testTooLargeK() throws Exception {
+        AerospikeSearch search = new AerospikeSearch(aerospikeClient);
+
+        search.createVectorIndex(NAMESPACE, SET, "vectorBin");
+
+        // Large K should throw an exception
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> search.searchVector(NAMESPACE, SET, new float[]{1f, 0f, 1f}, 1000));
+    }
+
+    @Test
     void testListVectorIndexes() throws Exception {
         try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
-            search.createVectorIndex(NAMESPACE, SET, getEmbedder());
-            search.createVectorIndex(NAMESPACE, "set2", getEmbedder());
-            search.createVectorIndex(NAMESPACE, "set3", getEmbedder());
+            search.createVectorIndex(NAMESPACE, SET, "vectorBin");
+            search.createVectorIndex(NAMESPACE, "set2", "vectorBin2");
+            search.createVectorIndex(NAMESPACE, "set3", "vectorBin3");
 
             Map<String, IndexType> indexes = search.listIndexes();
 

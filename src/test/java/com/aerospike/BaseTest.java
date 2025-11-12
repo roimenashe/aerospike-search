@@ -8,6 +8,8 @@ import com.aerospike.client.policy.WritePolicy;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
+import java.util.Arrays;
+
 public abstract class BaseTest {
     protected static IAerospikeClient aerospikeClient;
     protected static final String NAMESPACE = "test";
@@ -21,19 +23,25 @@ public abstract class BaseTest {
         aerospikeClient.truncate(null, NAMESPACE, SET, null);
 
         WritePolicy wp = new WritePolicy();
+        String titleBin = "title";
+        String bodyBin = "body";
+        String vectorBin = "vectorBin";
 
         // Insert a few sample records with short text fields
-        aerospikeClient.put(wp, new Key(NAMESPACE, SET, "doc1"),
-                new Bin("title", "Lucene in Action"),
-                new Bin("body", "Full text search library for Java."));
+        aerospikeClient.put(wp, new Key(NAMESPACE, SET, "doc"),
+                new Bin(titleBin, "Lucene in Action"),
+                new Bin(bodyBin, "Full text search library for Java."),
+                new Bin(vectorBin, Arrays.asList(1f, 0f, 1f)));
 
         aerospikeClient.put(wp, new Key(NAMESPACE, SET, "doc2"),
-                new Bin("title", "Aerospike and Lucene"),
-                new Bin("body", "Combining Aerospike speed with Lucene indexing."));
+                new Bin(titleBin, "Aerospike and Lucene"),
+                new Bin(bodyBin, "Combining Aerospike speed with Lucene indexing."),
+                new Bin(vectorBin, Arrays.asList(0.8f, 0.2f, 1f)));
 
         aerospikeClient.put(wp, new Key(NAMESPACE, SET, "doc3"),
-                new Bin("title", "Distributed Databases"),
-                new Bin("body", "Aerospike provides low latency storage."));
+                new Bin(titleBin, "Distributed Databases"),
+                new Bin(bodyBin, "Aerospike provides low latency storage."),
+                new Bin(vectorBin, Arrays.asList(0f, 1f, 0f)));
     }
 
     @AfterAll

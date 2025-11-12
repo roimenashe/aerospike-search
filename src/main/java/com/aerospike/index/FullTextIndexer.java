@@ -56,9 +56,10 @@ public class FullTextIndexer implements AutoCloseable {
             doc.add(new StringField("id", encodedId, Field.Store.YES));
 
             record.bins.forEach((binName, value) -> {
-                String text = record.getString(binName);
-                if (text != null && !text.isEmpty()) {
-                    doc.add(new TextField(binName, text, Field.Store.YES));
+                if (value instanceof String text) {
+                    if (!text.isEmpty()) {
+                        doc.add(new TextField(binName, text, Field.Store.YES));
+                    }
                 }
             });
 

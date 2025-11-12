@@ -3,9 +3,9 @@
 
 In-memory embedded full-text and vector search for Aerospike, built on [Apache Lucene](https://github.com/apache/lucene), enabling fast keyword and semantic queries through a simple Java API.
 
-### Basic Examples
+## Basic Examples
 
-#### Full-Text
+### Full-Text
 ```java
 try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
     search.createFullTextIndex("namespace1", "set1");
@@ -13,7 +13,18 @@ try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
 }
 ```
 
-#### Vector
+### Vector
+
+#### Using pre-defined Vector Bin in Aerospike
+```java
+try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
+    search.createVectorIndexFromBin("namespace1", "set1", "vectorBin1");
+    float[] queryVector = new float[]{1f, 0f, 1f};
+    List<Record> results = search.searchVector("namespace1", "set1", queryVector, 10);
+}
+```
+
+#### Using provided embedding function
 ```java
 try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
     search.createVectorIndex("namespace1", "set1", record -> {
@@ -28,24 +39,19 @@ try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
 }
 ```
 
-#### Hybrid (Full-Text + Vector)
+### Hybrid (Full-Text + Vector)
 ```java
 try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
     search.createFullTextIndex("namespace1", "set1");
-    search.createVectorIndex("namespace1", "set1", record -> {
-        String text = record.getString("bio");
-        float lucene = text != null && text.contains("Lucene") ? 1f : 0f;
-        float aerospike = text != null && text.contains("Aerospike") ? 1f : 0f;
-        float searchWord = text != null && text.contains("search") ? 1f : 0f;
-        return new float[]{lucene, aerospike, searchWord};
-    });
+    search.createVectorIndexFromBin("namespace1", "set1", "vectorBin1");
 
-    float[] queryVector = new float[]{1f, 0f, 1f};
-    List<Record> results = search.searchHybrid("namespace1", "set1", "Lucene", queryVector, 10, 0.6, 0.4);
+float[] queryVector = new float[]{1f, 0f, 1f};
+List<Record> results = search.searchHybrid("namespace1", "set1", "Lucene", queryVector, 10, 0.6, 0.4);
 }
 ```
 
-### Notes
+
+## Notes
 * For large-scale or distributed search use cases, consider using the
 [Aerospike Elasticsearch Connector](https://aerospike.com/docs/connectors/elasticsearch/), which provides scalable
 integration with Elasticsearch for enterprise-grade indexing and querying. 

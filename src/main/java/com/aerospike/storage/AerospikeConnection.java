@@ -1,11 +1,10 @@
 package com.aerospike.storage;
 
-import com.aerospike.client.IAerospikeClient;
-import com.aerospike.client.Key;
+import com.aerospike.client.*;
 import com.aerospike.client.Record;
-import com.aerospike.client.ScanCallback;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.ScanPolicy;
+import com.aerospike.client.query.Statement;
 
 import java.util.ArrayList;
 import java.util.Base64;
@@ -37,8 +36,8 @@ public class AerospikeConnection {
         return records;
     }
 
-    public void scan(String namespace, String set, ScanCallback scanCallback) {
+    public void scan(String namespace, String set, ScanCallback scanCallback, String... binNames) throws AerospikeException {
         ScanPolicy policy = new ScanPolicy();
-        client.scanAll(policy, namespace, set, scanCallback);
+        client.scanAll(policy, namespace, set, scanCallback, binNames);
     }
 }

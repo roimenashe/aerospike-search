@@ -41,7 +41,14 @@ public class AerospikeSearch implements AutoCloseable {
     }
 
     /**
-     * Build or rebuild a vector index from a given Aerospike namespace and set.
+     * Create or rebuild a vector index from a given Aerospike namespace, set and a vector bin.
+     */
+    public void createVectorIndex(String namespace, String set, String binName) throws Exception {
+        vectorIndexer.createVectorIndex(namespace, set, binName);
+    }
+
+    /**
+     * Create or rebuild a vector index from a given Aerospike namespace, set and an embedding function.
      */
     public void createVectorIndex(String namespace, String set, Function<Record, float[]> embedder) throws Exception {
         vectorIndexer.createVectorIndex(namespace, set, embedder);

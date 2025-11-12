@@ -14,6 +14,7 @@ import org.apache.lucene.index.VectorSimilarityFunction;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,6 +36,60 @@ public class VectorIndexer implements AutoCloseable {
     public VectorIndexer(AerospikeConnection aerospikeConnection) {
         this.aerospikeConnection = aerospikeConnection;
         this.analyzer = new StandardAnalyzer();
+    }
+
+    /**
+     * Builds a Lucene vector index directly from an existing vector bin in Aerospike.
+     * The bin must contain float[] values.
+     */
+    public void createVectorIndex(String namespace, String set, String vectorBinName) throws Exception {
+        String key = IndexUtil.getUniqueIndexName(namespace, set);
+
+        Directory directory = directories.computeIfAbsent(key, k -> new ByteBuffersDirectory());
+        IndexWriter writer = writers.computeIfAbsent(key, k -> {
+            try {
+                return new IndexWriter(directory, new IndexWriterConfig(analyzer));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        writer.deleteAll();
+        AtomicLong count = new AtomicLong();
+
+        aerospikeConnection.scan(namespace, set, (Key akey, Record record) -> {
+            Document doc = new Document();
+            String encodedId = Base64.getEncoder().encodeToString(akey.digest);
+            doc.add(new StringField("id", encodedId, Field.Store.YES));
+
+            Object val = record.getValue(vectorBinName);
+            if (!(val instanceof List<?> list)) return;
+
+            // Convert List<Number> to float[]
+            float[] vector = new float[list.size()];
+            for (int i = 0; i < list.size(); i++) {
+                vector[i] = ((Number) list.get(i)).floatValue();
+            }
+
+            doc.add(new KnnFloatVectorField("vector", vector, VectorSimilarityFunction.DOT_PRODUCT));
+
+            synchronized (writer) {
+                try {
+                    writer.addDocument(doc);
+                    count.incrementAndGet();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }, vectorBinName);
+
+        writer.commit();
+        DirectoryReader reader = DirectoryReader.open(writer);
+        IndexSearcher searcher = new IndexSearcher(reader);
+        searchers.put(key, searcher);
+
+        System.out.printf("Vector-indexed %d records (from bin '%s') for [%s:%s]%n",
+                count.get(), vectorBinName, namespace, set);
     }
 
     /**
