@@ -44,3 +44,8 @@ try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
     List<Record> results = search.searchHybrid("namespace1", "set1", "Lucene", queryVector, 10, 0.6, 0.4);
 }
 ```
+
+### Notes
+* For large-scale or distributed search use cases, consider using the
+[Aerospike Elasticsearch Connector](https://aerospike.com/docs/connectors/elasticsearch/), which provides scalable
+integration with Elasticsearch for enterprise-grade indexing and querying. 
