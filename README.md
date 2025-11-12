@@ -1,7 +1,7 @@
 # Aerospike Search
 [![Build and Test](https://github.com/roimenashe/aerospike-search/actions/workflows/build.yml/badge.svg)](https://github.com/roimenashe/aerospike-search/actions/workflows/build.yml)
 
-In-memory embedded full-text and vector search for Aerospike, built on Apache Lucene, enabling fast keyword and semantic queries through a simple Java API.
+In-memory embedded full-text and vector search for Aerospike, built on [Apache Lucene](https://github.com/apache/lucene), enabling fast keyword and semantic queries through a simple Java API.
 
 ### Basic Examples
 
