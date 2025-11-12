@@ -52,4 +52,37 @@ public class FullTextSearchService {
 
         return results;
     }
+
+    public List<HybridSearchService.ScoredId> searchWithScores(String namespace, String set,
+                                                               String queryStr, int limit) throws Exception {
+        IndexSearcher indexSearcher = indexer.getIndexSearcher(namespace, set);
+        if (indexSearcher == null)
+            throw new IllegalStateException("Index not built yet.");
+
+        FieldInfos fieldInfos = indexSearcher.getIndexReader()
+                .leaves()
+                .getFirst()
+                .reader()
+                .getFieldInfos();
+
+        List<String> fields = new ArrayList<>();
+        for (FieldInfo fi : fieldInfos) {
+            if (!"id".equals(fi.name)) {
+                fields.add(fi.name);
+            }
+        }
+        String[] fieldNames = fields.toArray(new String[0]);
+
+        Query query = new MultiFieldQueryParser(fieldNames, indexer.getAnalyzer()).parse(queryStr);
+        TopDocs topDocs = indexSearcher.search(query, limit);
+
+        List<HybridSearchService.ScoredId> results = new ArrayList<>();
+        for (ScoreDoc sd : topDocs.scoreDocs) {
+            LeafReaderContext leaf = indexSearcher.getIndexReader().leaves().get(ReaderUtil.subIndex(sd.doc, indexSearcher.getIndexReader().leaves()));
+            StoredFields storedFields = leaf.reader().storedFields();
+            Document doc = storedFields.document(sd.doc - leaf.docBase);
+            results.add(new HybridSearchService.ScoredId(doc.get("id"), sd.score));
+        }
+        return results;
+    }
 }

@@ -41,4 +41,23 @@ public class VectorSearchService {
 
         return results;
     }
+
+    public List<HybridSearchService.ScoredId> searchWithScores(String namespace, String set,
+                                                               float[] queryVector, int k) throws IOException {
+        IndexSearcher indexSearcher = indexer.getIndexSearcher(namespace, set);
+        if (indexSearcher == null)
+            throw new IllegalStateException("Index not built yet.");
+
+        Query query = new KnnFloatVectorQuery("vector", queryVector, k);
+        TopDocs topDocs = indexSearcher.search(query, k);
+
+        List<HybridSearchService.ScoredId> results = new ArrayList<>();
+        for (ScoreDoc sd : topDocs.scoreDocs) {
+            LeafReaderContext leaf = indexSearcher.getIndexReader().leaves().get(ReaderUtil.subIndex(sd.doc, indexSearcher.getIndexReader().leaves()));
+            StoredFields storedFields = leaf.reader().storedFields();
+            Document doc = storedFields.document(sd.doc - leaf.docBase);
+            results.add(new HybridSearchService.ScoredId(doc.get("id"), sd.score));
+        }
+        return results;
+    }
 }

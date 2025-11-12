@@ -6,6 +6,7 @@ import com.aerospike.index.FullTextIndexer;
 import com.aerospike.index.VectorIndexer;
 import com.aerospike.model.IndexType;
 import com.aerospike.search.FullTextSearchService;
+import com.aerospike.search.HybridSearchService;
 import com.aerospike.search.VectorSearchService;
 import com.aerospike.storage.AerospikeConnection;
 
@@ -21,6 +22,7 @@ public class AerospikeSearch implements AutoCloseable {
     private final FullTextSearchService fullTextSearchService;
     private final VectorIndexer vectorIndexer;
     private final VectorSearchService vectorSearchService;
+    private final HybridSearchService hybridSearchService;
 
     public AerospikeSearch(IAerospikeClient client) {
         this.aerospikeConnection = new AerospikeConnection(client);
@@ -28,6 +30,7 @@ public class AerospikeSearch implements AutoCloseable {
         this.fullTextSearchService = new FullTextSearchService(fullTextIndexer);
         this.vectorIndexer = new VectorIndexer(aerospikeConnection);
         this.vectorSearchService = new VectorSearchService(vectorIndexer);
+        this.hybridSearchService = new HybridSearchService(fullTextSearchService, vectorSearchService);
     }
 
     /**
@@ -73,8 +76,20 @@ public class AerospikeSearch implements AutoCloseable {
         return aerospikeConnection.fetchRecordsByDigest(namespace, set, encodedIds);
     }
 
+    public List<Record> searchHybrid(String namespace, String set,
+                                     String textQuery,
+                                     float[] queryVector,
+                                     int limit,
+                                     double textWeight,
+                                     double vectorWeight) throws Exception {
+        List<String> encodedIds =
+                hybridSearchService.searchHybrid(namespace, set, textQuery, queryVector, limit, textWeight, vectorWeight);
+        return aerospikeConnection.fetchRecordsByDigest(namespace, set, encodedIds);
+    }
+
     @Override
     public void close() throws Exception {
         fullTextIndexer.close();
+        vectorIndexer.close();
     }
 }
