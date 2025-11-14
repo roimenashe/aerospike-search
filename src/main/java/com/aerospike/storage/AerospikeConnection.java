@@ -1,7 +1,10 @@
 package com.aerospike.storage;
 
-import com.aerospike.client.*;
+import com.aerospike.client.IAerospikeClient;
 import com.aerospike.client.Record;
+import com.aerospike.client.Key;
+import com.aerospike.client.ScanCallback;
+import com.aerospike.client.AerospikeException;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.ScanPolicy;
 
@@ -17,9 +20,6 @@ public class AerospikeConnection {
         this.client = client;
     }
 
-    /**
-     * Fetch full records from Aerospike using their digests (as base64 strings).
-     */
     public List<Record> fetchRecordsByDigest(String namespace, String set, List<String> encodedDigests) {
         List<Record> records = new ArrayList<>();
         Policy policy = new Policy();

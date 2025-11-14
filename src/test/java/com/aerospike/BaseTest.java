@@ -27,7 +27,7 @@ public abstract class BaseTest {
         String bodyBin = "body";
         String vectorBin = "vectorBin";
 
-        // Insert a few sample records with short text fields
+        // Insert a few sample records
         aerospikeClient.put(wp, new Key(NAMESPACE, SET, "doc"),
                 new Bin(titleBin, "Lucene in Action"),
                 new Bin(bodyBin, "Full text search library for Java."),

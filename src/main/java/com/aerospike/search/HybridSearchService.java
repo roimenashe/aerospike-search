@@ -3,9 +3,6 @@ package com.aerospike.search;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Combines full-text and vector search results with weighted score fusion.
- */
 public class HybridSearchService {
 
     private final FullTextSearchService fullTextSearchService;
@@ -16,9 +13,6 @@ public class HybridSearchService {
         this.vectorService = vectorService;
     }
 
-    /**
-     * Runs both searches and merges results by weighted normalized score.
-     */
     public List<String> searchHybrid(String namespace,
                                      String set,
                                      String textQuery,

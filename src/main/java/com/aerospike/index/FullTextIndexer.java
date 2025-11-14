@@ -31,10 +31,6 @@ public class FullTextIndexer implements AutoCloseable {
         this.analyzer = new StandardAnalyzer();
     }
 
-    /**
-     * Builds or rebuilds an in-memory full-text index for a given namespace + set.
-     * Each namespace+set combination gets its own isolated Lucene index.
-     */
     public void createFullTextIndex(String namespace, String set) throws Exception {
         String key = IndexUtil.getUniqueIndexName(namespace, set);
 

@@ -19,9 +19,6 @@ public class VectorSearchService {
         this.indexer = indexer;
     }
 
-    /**
-     * Performs vector similarity search within the given (namespace:set) index.
-     */
     public List<String> searchVector(String namespace, String set, float[] queryVector, int k) throws IOException {
         IndexSearcher indexSearcher = indexer.getIndexSearcher(namespace, set);
         if (indexSearcher == null) {

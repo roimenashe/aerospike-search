@@ -21,10 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
-/**
- * Builds and manages Lucene vector indexes for Aerospike sets.
- * Each (namespace:set) pair gets its own in-memory vector index.
- */
 public class VectorIndexer implements AutoCloseable {
 
     private final AerospikeConnection aerospikeConnection;
@@ -38,10 +34,6 @@ public class VectorIndexer implements AutoCloseable {
         this.analyzer = new StandardAnalyzer();
     }
 
-    /**
-     * Builds a Lucene vector index directly from an existing vector bin in Aerospike.
-     * The bin must contain float[] values.
-     */
     public void createVectorIndex(String namespace, String set, String vectorBinName) throws Exception {
         String key = IndexUtil.getUniqueIndexName(namespace, set);
 
