@@ -35,7 +35,6 @@ public class VectorGloVeSmallTest extends BaseTest {
 
         for (Map.Entry<String, float[]> entry : vectors.entrySet()) {
             String token = entry.getKey();
-            float[] vector = entry.getValue();
 
             aerospikeClient.put(
                     wp,
