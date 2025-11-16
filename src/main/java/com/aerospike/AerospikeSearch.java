@@ -112,6 +112,10 @@ public class AerospikeSearch implements AutoCloseable {
     }
 
     /**
+     * Perform a hybrid search that combines full-text matching and vector similarity.
+     * Full-text and vector scores are weighted and merged to produce a unified ranking.
+     * Returns the top results ordered by hybrid relevance.
+     *
      * @param namespace    Aerospike namespace
      * @param set          Aerospike set
      * @param textQuery    Full-text query string
