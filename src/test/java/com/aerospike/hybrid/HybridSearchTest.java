@@ -1,5 +1,7 @@
-package com.aerospike;
+package com.aerospike.hybrid;
 
+import com.aerospike.AerospikeSearch;
+import com.aerospike.BaseTest;
 import com.aerospike.client.Record;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

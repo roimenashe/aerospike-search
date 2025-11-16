@@ -1,5 +1,7 @@
-package com.aerospike;
+package com.aerospike.vector;
 
+import com.aerospike.AerospikeSearch;
+import com.aerospike.BaseTest;
 import com.aerospike.client.Record;
 import com.aerospike.model.IndexType;
 import org.junit.jupiter.api.*;

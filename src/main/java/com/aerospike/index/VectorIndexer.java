@@ -4,6 +4,7 @@ import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 import com.aerospike.storage.AerospikeConnection;
 import com.aerospike.util.IndexUtil;
+import com.aerospike.util.VectorUtil;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
@@ -54,13 +55,24 @@ public class VectorIndexer implements AutoCloseable {
             String encodedId = Base64.getEncoder().encodeToString(akey.digest);
             doc.add(new StringField("id", encodedId, Field.Store.YES));
 
-            Object val = record.getValue(vectorBinName);
-            if (!(val instanceof List<?> list)) return;
+            Object raw = record.getValue(vectorBinName);
+            if (raw == null) return;
 
-            // Convert List<Number> to float[]
-            float[] vector = new float[list.size()];
-            for (int i = 0; i < list.size(); i++) {
-                vector[i] = ((Number) list.get(i)).floatValue();
+            float[] vector;
+
+            // Case 1: byte[]
+            if (raw instanceof byte[] bytes) {
+                vector = VectorUtil.bytesToFloats(bytes);
+            }
+            // Case 2: List<Number>
+            else if (raw instanceof List<?> list) {
+                vector = new float[list.size()];
+                for (int i = 0; i < list.size(); i++) {
+                    vector[i] = ((Number) list.get(i)).floatValue();
+                }
+            } else {
+                // unsupported type
+                return;
             }
 
             doc.add(new KnnFloatVectorField("vector", vector, VectorSimilarityFunction.DOT_PRODUCT));
@@ -83,6 +95,7 @@ public class VectorIndexer implements AutoCloseable {
         System.out.printf("Vector-indexed %d records (from bin '%s') for [%s:%s]%n",
                 count.get(), vectorBinName, namespace, set);
     }
+
 
     /**
      * Scans Aerospike records, computes vector embeddings via the supplied embedder,

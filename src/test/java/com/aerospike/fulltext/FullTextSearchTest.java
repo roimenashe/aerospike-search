@@ -1,5 +1,7 @@
-package com.aerospike;
+package com.aerospike.fulltext;
 
+import com.aerospike.AerospikeSearch;
+import com.aerospike.BaseTest;
 import com.aerospike.client.Key;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Record;
