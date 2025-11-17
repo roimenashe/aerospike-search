@@ -5,7 +5,7 @@ import com.aerospike.client.Record;
 import com.aerospike.client.Key;
 import com.aerospike.client.ScanCallback;
 import com.aerospike.client.AerospikeException;
-import com.aerospike.client.policy.Policy;
+import com.aerospike.client.policy.BatchPolicy;
 import com.aerospike.client.policy.ScanPolicy;
 
 import java.util.ArrayList;
@@ -21,18 +21,25 @@ public class AerospikeConnection {
     }
 
     public List<Record> fetchRecordsByDigest(String namespace, String set, List<String> encodedDigests) {
-        List<Record> records = new ArrayList<>();
-        Policy policy = new Policy();
+        List<Record> results = new ArrayList<>(encodedDigests.size());
 
-        for (String encoded : encodedDigests) {
-            byte[] digest = Base64.getDecoder().decode(encoded);
-            Key key = new Key(namespace, digest, set, null);
-            Record record = client.get(policy, key);
+        // Convert encoded digests → Keys
+        Key[] keys = new Key[encodedDigests.size()];
+        for (int i = 0; i < encodedDigests.size(); i++) {
+            byte[] digest = Base64.getDecoder().decode(encodedDigests.get(i));
+            keys[i] = new Key(namespace, digest, set, null);
+        }
+
+        BatchPolicy batchPolicy = new BatchPolicy();
+        Record[] records = client.get(batchPolicy, keys);
+
+        // Collect non-null results
+        for (Record record : records) {
             if (record != null) {
-                records.add(record);
+                results.add(record);
             }
         }
-        return records;
+        return results;
     }
 
     public void scan(String namespace, String set, ScanCallback scanCallback, String... binNames) throws AerospikeException {
