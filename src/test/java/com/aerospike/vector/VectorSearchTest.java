@@ -4,6 +4,7 @@ import com.aerospike.AerospikeSearch;
 import com.aerospike.BaseTest;
 import com.aerospike.client.Record;
 import com.aerospike.model.IndexType;
+import com.aerospike.model.SimilarityFunction;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -18,13 +19,13 @@ public class VectorSearchTest extends BaseTest {
 
         try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
             // Build vector index directly from Aerospike bin
-            search.createVectorIndex(NAMESPACE, SET, vectorBin);
+            search.createVectorIndex(NAMESPACE, SET, vectorBin, SimilarityFunction.DOT_PRODUCT);
 
             // Query vector representing "Lucene search"
             float[] queryVector = new float[]{1f, 0f, 1f};
 
             // Perform vector search (top 2 results)
-            List<Record> results = search.searchVector(NAMESPACE, SET, queryVector, 2);
+            List<Record> results = search.searchVector(NAMESPACE, SET, queryVector, 2, SimilarityFunction.DOT_PRODUCT);
 
             results.forEach(System.out::println);
 
@@ -45,13 +46,13 @@ public class VectorSearchTest extends BaseTest {
     void testVectorIndexWithEmbeddingFunctionAndSearch() throws Exception {
         try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
             // Build vector index from Aerospike data
-            search.createVectorIndex(NAMESPACE, SET, getEmbedder());
+            search.createVectorIndex(NAMESPACE, SET, getEmbedder(), SimilarityFunction.DOT_PRODUCT);
 
             // Query vector representing "Lucene search"
             float[] queryVector = new float[]{1f, 0f, 1f};
 
             // Perform vector search (top 2 results)
-            List<Record> results = search.searchVector(NAMESPACE, SET, queryVector, 2);
+            List<Record> results = search.searchVector(NAMESPACE, SET, queryVector, 2, SimilarityFunction.DOT_PRODUCT);
 
             results.forEach(System.out::println);
             Assertions.assertEquals(2, results.size());
@@ -86,23 +87,22 @@ public class VectorSearchTest extends BaseTest {
     void testTooLargeK() throws Exception {
         AerospikeSearch search = new AerospikeSearch(aerospikeClient);
 
-        search.createVectorIndex(NAMESPACE, SET, "vectorBin");
+        search.createVectorIndex(NAMESPACE, SET, "vectorBin", SimilarityFunction.DOT_PRODUCT);
 
         // Large K should throw an exception
         Assertions.assertThrows(IllegalArgumentException.class,
-                () -> search.searchVector(NAMESPACE, SET, new float[]{1f, 0f, 1f}, 1000));
+                () -> search.searchVector(NAMESPACE, SET, new float[]{1f, 0f, 1f}, 1000, SimilarityFunction.DOT_PRODUCT));
     }
 
     @Test
     void testListVectorIndexes() throws Exception {
         try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
-            search.createVectorIndex(NAMESPACE, SET, "vectorBin");
-            search.createVectorIndex(NAMESPACE, "set2", "vectorBin2");
-            search.createVectorIndex(NAMESPACE, "set3", "vectorBin3");
+            search.createVectorIndex(NAMESPACE, SET, "vectorBin", SimilarityFunction.DOT_PRODUCT);
+            search.createVectorIndex(NAMESPACE, "set2", "vectorBin2", SimilarityFunction.DOT_PRODUCT);
+            search.createVectorIndex(NAMESPACE, "set3", "vectorBin3", SimilarityFunction.DOT_PRODUCT);
 
             Map<String, IndexType> indexes = search.listIndexes();
 
-            // Exactly 3 full-text indexes
             Assertions.assertEquals(3, indexes.size());
             indexes.forEach((s, indexType) -> Assertions.assertEquals(IndexType.VECTOR, indexType));
         }

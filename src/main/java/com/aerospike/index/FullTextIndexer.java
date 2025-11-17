@@ -3,7 +3,7 @@ package com.aerospike.index;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 import com.aerospike.storage.AerospikeConnection;
-import com.aerospike.util.IndexUtil;
+import com.aerospike.util.FullTextUtil;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
@@ -32,7 +32,7 @@ public class FullTextIndexer implements AutoCloseable {
     }
 
     public void createFullTextIndex(String namespace, String set) throws Exception {
-        String key = IndexUtil.getUniqueIndexName(namespace, set);
+        String key = FullTextUtil.getFullTextUniqueIndexName(namespace, set);
 
         Directory directory = directories.computeIfAbsent(key, k -> new ByteBuffersDirectory());
         IndexWriter writer = writers.computeIfAbsent(key, k -> {
@@ -82,7 +82,7 @@ public class FullTextIndexer implements AutoCloseable {
     }
 
     public IndexSearcher getIndexSearcher(String namespace, String set) {
-        return searchers.get(IndexUtil.getUniqueIndexName(namespace, set));
+        return searchers.get(FullTextUtil.getFullTextUniqueIndexName(namespace, set));
     }
 
     public Analyzer getAnalyzer() {

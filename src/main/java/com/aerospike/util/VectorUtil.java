@@ -1,9 +1,17 @@
 package com.aerospike.util;
 
+import com.aerospike.model.SimilarityFunction;
+import org.apache.lucene.index.VectorSimilarityFunction;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class VectorUtil {
+
+    public static String getUniqueVectorIndexName(String namespace, String set, SimilarityFunction similarityFunction) {
+        return namespace + ":" + set + ":" + similarityFunction.name();
+    }
+
     public static byte[] floatsToBytes(float[] floats) {
         ByteBuffer buffer = ByteBuffer.allocate(floats.length * 4);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -20,5 +28,14 @@ public class VectorUtil {
             floats[i] = buffer.getFloat();
         }
         return floats;
+    }
+
+    public static VectorSimilarityFunction getVectorSimilarityFunction(SimilarityFunction similarityFunction) {
+        return switch (similarityFunction) {
+            case DOT_PRODUCT -> VectorSimilarityFunction.DOT_PRODUCT;
+            case COSINE -> VectorSimilarityFunction.COSINE;
+            case EUCLIDEAN -> VectorSimilarityFunction.EUCLIDEAN;
+            default -> throw new IllegalArgumentException("Unsupported similarity function: " + similarityFunction);
+        };
     }
 }

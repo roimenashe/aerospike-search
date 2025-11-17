@@ -1,5 +1,7 @@
 package com.aerospike.search;
 
+import com.aerospike.model.SimilarityFunction;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -17,12 +19,13 @@ public class HybridSearchService {
                                      String set,
                                      String textQuery,
                                      float[] queryVector,
+                                     SimilarityFunction similarityFunction,
                                      int limit,
                                      double textWeight,
                                      double vectorWeight) throws Exception {
         // Run both searches
         List<ScoredId> textResults = fullTextSearchService.searchWithScores(namespace, set, textQuery, limit);
-        List<ScoredId> vectorResults = vectorService.searchWithScores(namespace, set, queryVector, limit);
+        List<ScoredId> vectorResults = vectorService.searchWithScores(namespace, set, queryVector, limit, similarityFunction);
 
         // Normalize each list’s scores to [0,1]
         normalizeScores(textResults);

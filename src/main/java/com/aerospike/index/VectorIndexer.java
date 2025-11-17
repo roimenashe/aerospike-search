@@ -2,8 +2,8 @@ package com.aerospike.index;
 
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
+import com.aerospike.model.SimilarityFunction;
 import com.aerospike.storage.AerospikeConnection;
-import com.aerospike.util.IndexUtil;
 import com.aerospike.util.VectorUtil;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -11,7 +11,6 @@ import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.*;
-import org.apache.lucene.index.VectorSimilarityFunction;
 
 import java.io.IOException;
 import java.util.Base64;
@@ -21,6 +20,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+
+import static com.aerospike.util.VectorUtil.getVectorSimilarityFunction;
 
 public class VectorIndexer implements AutoCloseable {
 
@@ -35,8 +36,9 @@ public class VectorIndexer implements AutoCloseable {
         this.analyzer = new StandardAnalyzer();
     }
 
-    public void createVectorIndex(String namespace, String set, String vectorBinName) throws Exception {
-        String key = IndexUtil.getUniqueIndexName(namespace, set);
+    public void createVectorIndex(String namespace, String set, String vectorBinName,
+                                  SimilarityFunction similarityFunction) throws Exception {
+        String key = VectorUtil.getUniqueVectorIndexName(namespace, set, similarityFunction);
 
         Directory directory = directories.computeIfAbsent(key, k -> new ByteBuffersDirectory());
         IndexWriter writer = writers.computeIfAbsent(key, k -> {
@@ -75,7 +77,7 @@ public class VectorIndexer implements AutoCloseable {
                 return;
             }
 
-            doc.add(new KnnFloatVectorField("vector", vector, VectorSimilarityFunction.DOT_PRODUCT));
+            doc.add(new KnnFloatVectorField("vector", vector, getVectorSimilarityFunction(similarityFunction)));
 
             synchronized (writer) {
                 try {
@@ -102,8 +104,8 @@ public class VectorIndexer implements AutoCloseable {
      * and builds an in-memory Lucene vector index.
      */
     public void createVectorIndex(String namespace, String set,
-                                  Function<Record, float[]> embedder) throws Exception {
-        String key = IndexUtil.getUniqueIndexName(namespace, set);
+                                  Function<Record, float[]> embedder, SimilarityFunction similarityFunction) throws Exception {
+        String key = VectorUtil.getUniqueVectorIndexName(namespace, set, similarityFunction);
 
         Directory directory = directories.computeIfAbsent(key, k -> new ByteBuffersDirectory());
         IndexWriter writer = writers.computeIfAbsent(key, k -> {
@@ -131,7 +133,7 @@ public class VectorIndexer implements AutoCloseable {
             }
 
             // Add vector field
-            doc.add(new KnnFloatVectorField("vector", vector, VectorSimilarityFunction.DOT_PRODUCT));
+            doc.add(new KnnFloatVectorField("vector", vector, getVectorSimilarityFunction(similarityFunction)));
 
             synchronized (writer) {
                 try {
@@ -155,8 +157,8 @@ public class VectorIndexer implements AutoCloseable {
         return directories.keySet();
     }
 
-    public IndexSearcher getIndexSearcher(String namespace, String set) {
-        return searchers.get(IndexUtil.getUniqueIndexName(namespace, set));
+    public IndexSearcher getIndexSearcher(String namespace, String set, SimilarityFunction similarityFunction) {
+        return searchers.get(VectorUtil.getUniqueVectorIndexName(namespace, set, similarityFunction));
     }
 
     @Override

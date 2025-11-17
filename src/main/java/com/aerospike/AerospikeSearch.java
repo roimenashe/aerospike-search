@@ -5,6 +5,7 @@ import com.aerospike.client.Record;
 import com.aerospike.index.FullTextIndexer;
 import com.aerospike.index.VectorIndexer;
 import com.aerospike.model.IndexType;
+import com.aerospike.model.SimilarityFunction;
 import com.aerospike.search.FullTextSearchService;
 import com.aerospike.search.HybridSearchService;
 import com.aerospike.search.VectorSearchService;
@@ -34,7 +35,7 @@ public class AerospikeSearch implements AutoCloseable {
     }
 
     /**
-     * Build or rebuild a full-text index from a given Aerospike namespace and set.
+     * Build or rebuild a full-text index.
      *
      * @param namespace Aerospike namespace
      * @param set       Aerospike set
@@ -44,25 +45,27 @@ public class AerospikeSearch implements AutoCloseable {
     }
 
     /**
-     * Create or rebuild a vector index from a given Aerospike namespace, set and a vector bin.
+     * Create or rebuild a vector index on a vector Bin.
      *
-     * @param namespace Aerospike namespace
-     * @param set       Aerospike set
-     * @param vectorBin Vector Bin name
+     * @param namespace          Aerospike namespace
+     * @param set                Aerospike set
+     * @param vectorBin          Vector Bin name
+     * @param similarityFunction Vector similarity function (e.g. EUCLIDEAN)
      */
-    public void createVectorIndex(String namespace, String set, String vectorBin) throws Exception {
-        vectorIndexer.createVectorIndex(namespace, set, vectorBin);
+    public void createVectorIndex(String namespace, String set, String vectorBin, SimilarityFunction similarityFunction) throws Exception {
+        vectorIndexer.createVectorIndex(namespace, set, vectorBin, similarityFunction);
     }
 
     /**
-     * Create or rebuild a vector index from a given Aerospike namespace, set and an embedding function.
+     * Create or rebuild a vector index using an embedding function.
      *
-     * @param namespace Aerospike namespace
-     * @param set       Aerospike set
-     * @param embedder  Vector embedding function
+     * @param namespace          Aerospike namespace
+     * @param set                Aerospike set
+     * @param embedder           Vector embedding function
+     * @param similarityFunction Vector similarity function (e.g. EUCLIDEAN)
      */
-    public void createVectorIndex(String namespace, String set, Function<Record, float[]> embedder) throws Exception {
-        vectorIndexer.createVectorIndex(namespace, set, embedder);
+    public void createVectorIndex(String namespace, String set, Function<Record, float[]> embedder, SimilarityFunction similarityFunction) throws Exception {
+        vectorIndexer.createVectorIndex(namespace, set, embedder, similarityFunction);
     }
 
     /**
@@ -78,7 +81,7 @@ public class AerospikeSearch implements AutoCloseable {
     }
 
     /**
-     * Perform a full-text search over an in-memory index of a given Aerospike namespace and set.
+     * Perform a full-text search.
      *
      * @param namespace Aerospike namespace
      * @param set       Aerospike set
@@ -95,19 +98,20 @@ public class AerospikeSearch implements AutoCloseable {
     }
 
     /**
-     * Perform a vector search over an in-memory index of a given Aerospike namespace and set.
+     * Perform a vector search.
      *
-     * @param namespace   Aerospike namespace
-     * @param set         Aerospike set
-     * @param queryVector Float query vector
-     * @param k           The number of nearest neighbors to be retrieved for a given query
+     * @param namespace          Aerospike namespace
+     * @param set                Aerospike set
+     * @param queryVector        Float query vector
+     * @param k                  The number of nearest neighbors to be retrieved for a given query
+     * @param similarityFunction Vector similarity function (e.g. EUCLIDEAN)
      * @return List of results
      */
-    public List<Record> searchVector(String namespace, String set, float[] queryVector, int k) throws Exception {
+    public List<Record> searchVector(String namespace, String set, float[] queryVector, int k, SimilarityFunction similarityFunction) throws Exception {
         if (k > 100) {
             throw new IllegalArgumentException("K must be smaller than 100");
         }
-        List<String> encodedIds = vectorSearchService.searchVector(namespace, set, queryVector, k);
+        List<String> encodedIds = vectorSearchService.searchVector(namespace, set, queryVector, k, similarityFunction);
         return aerospikeConnection.fetchRecordsByDigest(namespace, set, encodedIds);
     }
 
@@ -116,23 +120,25 @@ public class AerospikeSearch implements AutoCloseable {
      * Full-text and vector scores are weighted and merged to produce a unified ranking.
      * Returns the top results ordered by hybrid relevance.
      *
-     * @param namespace    Aerospike namespace
-     * @param set          Aerospike set
-     * @param textQuery    Full-text query string
-     * @param queryVector  Float query vector
-     * @param limit        Result limit
-     * @param textWeight   Full-Text weight in query (Float between 0-1, combined with vectorWeight should be 1)
-     * @param vectorWeight Vector weight in query (Float between 0-1, combined with textWeight should be 1)
+     * @param namespace          Aerospike namespace
+     * @param set                Aerospike set
+     * @param textQuery          Full-text query string
+     * @param queryVector        Float query vector
+     * @param similarityFunction Vector similarity function (e.g. EUCLIDEAN)
+     * @param limit              Result limit
+     * @param textWeight         Full-Text weight in query (Float between 0-1, combined with vectorWeight should be 1)
+     * @param vectorWeight       Vector weight in query (Float between 0-1, combined with textWeight should be 1)
      * @return List of results
      */
     public List<Record> searchHybrid(String namespace, String set,
                                      String textQuery,
                                      float[] queryVector,
+                                     SimilarityFunction similarityFunction,
                                      int limit,
                                      double textWeight,
                                      double vectorWeight) throws Exception {
         List<String> encodedIds =
-                hybridSearchService.searchHybrid(namespace, set, textQuery, queryVector, limit, textWeight, vectorWeight);
+                hybridSearchService.searchHybrid(namespace, set, textQuery, queryVector, similarityFunction, limit, textWeight, vectorWeight);
         return aerospikeConnection.fetchRecordsByDigest(namespace, set, encodedIds);
     }
 

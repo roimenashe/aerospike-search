@@ -1,6 +1,7 @@
 package com.aerospike.search;
 
 import com.aerospike.index.VectorIndexer;
+import com.aerospike.model.SimilarityFunction;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.ReaderUtil;
@@ -19,10 +20,10 @@ public class VectorSearchService {
         this.indexer = indexer;
     }
 
-    public List<String> searchVector(String namespace, String set, float[] queryVector, int k) throws IOException {
-        IndexSearcher indexSearcher = indexer.getIndexSearcher(namespace, set);
+    public List<String> searchVector(String namespace, String set, float[] queryVector, int k, SimilarityFunction similarityFunction) throws IOException {
+        IndexSearcher indexSearcher = indexer.getIndexSearcher(namespace, set, similarityFunction);
         if (indexSearcher == null) {
-            throw new IllegalStateException("Index not built yet. Call createVectorIndex() first.");
+            throw new IllegalStateException("Vector index not built for similarityFunction: " + similarityFunction);
         }
 
         Query query = new KnnFloatVectorQuery("vector", queryVector, k);
@@ -40,10 +41,12 @@ public class VectorSearchService {
     }
 
     public List<HybridSearchService.ScoredId> searchWithScores(String namespace, String set,
-                                                               float[] queryVector, int k) throws IOException {
-        IndexSearcher indexSearcher = indexer.getIndexSearcher(namespace, set);
-        if (indexSearcher == null)
-            throw new IllegalStateException("Index not built yet.");
+                                                               float[] queryVector, int k,
+                                                               SimilarityFunction similarityFunction) throws IOException {
+        IndexSearcher indexSearcher = indexer.getIndexSearcher(namespace, set, similarityFunction);
+        if (indexSearcher == null) {
+            throw new IllegalStateException("Vector index not built for similarityFunction: " + similarityFunction);
+        }
 
         Query query = new KnnFloatVectorQuery("vector", queryVector, k);
         TopDocs topDocs = indexSearcher.search(query, k);

@@ -3,6 +3,7 @@ package com.aerospike.hybrid;
 import com.aerospike.AerospikeSearch;
 import com.aerospike.BaseTest;
 import com.aerospike.client.Record;
+import com.aerospike.model.SimilarityFunction;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -17,11 +18,18 @@ public class HybridSearchTest extends BaseTest {
         try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
             // Create full-text and vector indexes
             search.createFullTextIndex(NAMESPACE, SET);
-            search.createVectorIndex(NAMESPACE, SET, vectorBin);
+            search.createVectorIndex(NAMESPACE, SET, vectorBin, SimilarityFunction.DOT_PRODUCT);
 
             // Query: "Lucene" text + semantic vector [1,0,1]
             float[] queryVector = new float[]{1f, 0f, 1f};
-            List<Record> results = search.searchHybrid(NAMESPACE, SET, "Lucene", queryVector, 10, 0.6, 0.4);
+            List<Record> results = search.searchHybrid(NAMESPACE,
+                    SET,
+                    "Lucene",
+                    queryVector,
+                    SimilarityFunction.DOT_PRODUCT,
+                    10,
+                    0.6,
+                    0.4);
 
             results.forEach(System.out::println);
 
@@ -47,11 +55,18 @@ public class HybridSearchTest extends BaseTest {
                 float aerospike = text.contains("aerospike") ? 1f : 0f;
                 float searchWord = text.contains("search") ? 1f : 0f;
                 return new float[]{lucene, aerospike, searchWord};
-            });
+            }, SimilarityFunction.DOT_PRODUCT);
 
             // Run hybrid search combining text and vector scores
-            float[] queryVector = new float[]{1f, 0f, 1f}; // "Lucene search"
-            List<Record> results = search.searchHybrid(NAMESPACE, SET, "Lucene", queryVector, 10, 0.6, 0.4);
+            float[] queryVector = new float[]{1f, 0f, 1f};
+            List<Record> results = search.searchHybrid(NAMESPACE,
+                    SET,
+                    "Lucene",
+                    queryVector,
+                    SimilarityFunction.DOT_PRODUCT,
+                    10,
+                    0.6,
+                    0.4);
 
             results.forEach(System.out::println);
 

@@ -6,6 +6,7 @@ import com.aerospike.client.Record;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
 import com.aerospike.client.policy.WritePolicy;
+import com.aerospike.model.SimilarityFunction;
 import com.aerospike.util.VectorUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -71,9 +72,9 @@ public class VectorGloVeSmallTest extends BaseTest {
 
         try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
 
-            search.createVectorIndex(NAMESPACE, gloveSet, "vectorBin");
+            search.createVectorIndex(NAMESPACE, gloveSet, "vectorBin", SimilarityFunction.DOT_PRODUCT);
 
-            List<Record> results = search.searchVector(NAMESPACE, gloveSet, query, 5);
+            List<Record> results = search.searchVector(NAMESPACE, gloveSet, query, 5, SimilarityFunction.DOT_PRODUCT);
 
             Assertions.assertEquals(5, results.size());
 

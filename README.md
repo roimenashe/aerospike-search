@@ -18,9 +18,9 @@ try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
 #### Using pre-defined Vector Bin in Aerospike
 ```java
 try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
-    search.createVectorIndexFromBin("namespace1", "set1", "vectorBin1");
+    search.createVectorIndex("namespace1", "set1", "vectorBin", SimilarityFunction.DOT_PRODUCT);
     float[] queryVector = new float[]{1f, 0f, 1f};
-    List<Record> results = search.searchVector("namespace1", "set1", queryVector, 10);
+    List<Record> results = search.searchVector("namespace1", "set1", queryVector, 10, SimilarityFunction.DOT_PRODUCT);
 }
 ```
 
@@ -33,9 +33,9 @@ try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
         float aerospike = text != null && text.contains("Aerospike") ? 1f : 0f;
         float searchWord = text != null && text.contains("search") ? 1f : 0f;
         return new float[]{lucene, aerospike, searchWord};
-    });
+    }, SimilarityFunction.DOT_PRODUCT);
     float[] queryVector = new float[]{1f, 0f, 1f};
-    List<Record> results = search.searchVector("namespace1", "set1", queryVector, 10);
+    List<Record> results = search.searchVector("namespace1", "set1", queryVector, 10, SimilarityFunction.DOT_PRODUCT);
 }
 ```
 
@@ -43,10 +43,10 @@ try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
 ```java
 try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
     search.createFullTextIndex("namespace1", "set1");
-    search.createVectorIndexFromBin("namespace1", "set1", "vectorBin1");
+    search.createVectorIndex("namespace1", "set1", "vectorBin", SimilarityFunction.DOT_PRODUCT);
 
     float[] queryVector = new float[]{1f, 0f, 1f};
-    List<Record> results = search.searchHybrid("namespace1", "set1", "Lucene", queryVector, 10, 0.6, 0.4);
+    List<Record> results = search.searchHybrid("namespace1", "set1", "Lucene", queryVector, 10, 0.6, 0.4, SimilarityFunction.DOT_PRODUCT);
 }
 ```
 
@@ -54,4 +54,4 @@ try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
 ## Notes
 * For large-scale or distributed search use cases, consider using the
 [Aerospike Elasticsearch Connector](https://aerospike.com/docs/connectors/elasticsearch/), which provides scalable
-integration with Elasticsearch for enterprise-grade indexing and querying. 
+integration with Elasticsearch for enterprise-grade indexing and querying.
