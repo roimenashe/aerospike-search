@@ -22,9 +22,8 @@ public class AerospikeConnection {
 
     public List<Record> fetchRecordsByDigest(String namespace, String set, List<String> encodedDigests) {
         List<Record> results = new ArrayList<>(encodedDigests.size());
-
-        // Convert encoded digests → Keys
         Key[] keys = new Key[encodedDigests.size()];
+
         for (int i = 0; i < encodedDigests.size(); i++) {
             byte[] digest = Base64.getDecoder().decode(encodedDigests.get(i));
             keys[i] = new Key(namespace, digest, set, null);
@@ -33,7 +32,6 @@ public class AerospikeConnection {
         BatchPolicy batchPolicy = new BatchPolicy();
         Record[] records = client.get(batchPolicy, keys);
 
-        // Collect non-null results
         for (Record record : records) {
             if (record != null) {
                 results.add(record);
