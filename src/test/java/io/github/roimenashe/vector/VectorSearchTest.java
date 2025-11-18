@@ -1,10 +1,10 @@
-package com.aerospike.vector;
+package io.github.roimenashe.vector;
 
-import com.aerospike.AerospikeSearch;
-import com.aerospike.BaseTest;
+import io.github.roimenashe.AerospikeSearch;
+import io.github.roimenashe.BaseTest;
 import com.aerospike.client.Record;
-import com.aerospike.model.IndexType;
-import com.aerospike.model.SimilarityFunction;
+import io.github.roimenashe.model.IndexType;
+import io.github.roimenashe.model.SimilarityFunction;
 import org.junit.jupiter.api.*;
 
 import java.util.List;

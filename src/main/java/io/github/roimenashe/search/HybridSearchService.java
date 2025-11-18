@@ -1,6 +1,6 @@
-package com.aerospike.search;
+package io.github.roimenashe.search;
 
-import com.aerospike.model.SimilarityFunction;
+import io.github.roimenashe.model.SimilarityFunction;
 
 import java.util.*;
 import java.util.stream.Collectors;

@@ -1,4 +1,4 @@
-package com.aerospike;
+package io.github.roimenashe;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Bin;

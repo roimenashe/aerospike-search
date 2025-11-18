@@ -1,10 +1,10 @@
-package com.aerospike.index;
+package io.github.roimenashe.index;
 
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
-import com.aerospike.model.SimilarityFunction;
-import com.aerospike.storage.AerospikeConnection;
-import com.aerospike.util.VectorUtil;
+import io.github.roimenashe.model.SimilarityFunction;
+import io.github.roimenashe.storage.AerospikeConnection;
+import io.github.roimenashe.util.VectorUtil;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
-import static com.aerospike.util.VectorUtil.getVectorSimilarityFunction;
+import static io.github.roimenashe.util.VectorUtil.getVectorSimilarityFunction;
 
 public class VectorIndexer implements AutoCloseable {
 

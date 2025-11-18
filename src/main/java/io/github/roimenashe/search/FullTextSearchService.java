@@ -1,6 +1,6 @@
-package com.aerospike.search;
+package io.github.roimenashe.search;
 
-import com.aerospike.index.FullTextIndexer;
+import io.github.roimenashe.index.FullTextIndexer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;

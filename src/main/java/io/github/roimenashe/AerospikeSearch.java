@@ -1,15 +1,15 @@
-package com.aerospike;
+package io.github.roimenashe;
 
 import com.aerospike.client.IAerospikeClient;
 import com.aerospike.client.Record;
-import com.aerospike.index.FullTextIndexer;
-import com.aerospike.index.VectorIndexer;
-import com.aerospike.model.IndexType;
-import com.aerospike.model.SimilarityFunction;
-import com.aerospike.search.FullTextSearchService;
-import com.aerospike.search.HybridSearchService;
-import com.aerospike.search.VectorSearchService;
-import com.aerospike.storage.AerospikeConnection;
+import io.github.roimenashe.index.FullTextIndexer;
+import io.github.roimenashe.index.VectorIndexer;
+import io.github.roimenashe.model.IndexType;
+import io.github.roimenashe.model.SimilarityFunction;
+import io.github.roimenashe.search.FullTextSearchService;
+import io.github.roimenashe.search.HybridSearchService;
+import io.github.roimenashe.search.VectorSearchService;
+import io.github.roimenashe.storage.AerospikeConnection;
 
 import java.util.HashMap;
 import java.util.List;

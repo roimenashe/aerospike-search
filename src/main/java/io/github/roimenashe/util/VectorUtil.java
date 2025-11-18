@@ -1,6 +1,6 @@
-package com.aerospike.util;
+package io.github.roimenashe.util;
 
-import com.aerospike.model.SimilarityFunction;
+import io.github.roimenashe.model.SimilarityFunction;
 import org.apache.lucene.index.VectorSimilarityFunction;
 
 import java.nio.ByteBuffer;

@@ -1,11 +1,11 @@
-package com.aerospike.fulltext;
+package io.github.roimenashe.fulltext;
 
-import com.aerospike.AerospikeSearch;
-import com.aerospike.BaseTest;
+import io.github.roimenashe.AerospikeSearch;
+import io.github.roimenashe.BaseTest;
 import com.aerospike.client.Key;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Record;
-import com.aerospike.model.IndexType;
+import io.github.roimenashe.model.IndexType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

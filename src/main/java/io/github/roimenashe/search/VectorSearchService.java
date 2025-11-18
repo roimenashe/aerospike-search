@@ -1,7 +1,7 @@
-package com.aerospike.search;
+package io.github.roimenashe.search;
 
-import com.aerospike.index.VectorIndexer;
-import com.aerospike.model.SimilarityFunction;
+import io.github.roimenashe.index.VectorIndexer;
+import io.github.roimenashe.model.SimilarityFunction;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.ReaderUtil;

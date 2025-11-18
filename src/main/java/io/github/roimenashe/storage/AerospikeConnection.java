@@ -1,4 +1,4 @@
-package com.aerospike.storage;
+package io.github.roimenashe.storage;
 
 import com.aerospike.client.IAerospikeClient;
 import com.aerospike.client.Record;

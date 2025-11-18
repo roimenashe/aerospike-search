@@ -1,9 +1,9 @@
-package com.aerospike.index;
+package io.github.roimenashe.index;
 
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
-import com.aerospike.storage.AerospikeConnection;
-import com.aerospike.util.FullTextUtil;
+import io.github.roimenashe.storage.AerospikeConnection;
+import io.github.roimenashe.util.FullTextUtil;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;

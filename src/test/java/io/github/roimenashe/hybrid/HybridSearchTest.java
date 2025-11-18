@@ -1,9 +1,9 @@
-package com.aerospike.hybrid;
+package io.github.roimenashe.hybrid;
 
-import com.aerospike.AerospikeSearch;
-import com.aerospike.BaseTest;
+import io.github.roimenashe.AerospikeSearch;
+import io.github.roimenashe.BaseTest;
 import com.aerospike.client.Record;
-import com.aerospike.model.SimilarityFunction;
+import io.github.roimenashe.model.SimilarityFunction;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

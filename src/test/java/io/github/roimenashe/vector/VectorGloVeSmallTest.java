@@ -1,13 +1,13 @@
-package com.aerospike.vector;
+package io.github.roimenashe.vector;
 
-import com.aerospike.AerospikeSearch;
-import com.aerospike.BaseTest;
+import io.github.roimenashe.AerospikeSearch;
+import io.github.roimenashe.BaseTest;
 import com.aerospike.client.Record;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
 import com.aerospike.client.policy.WritePolicy;
-import com.aerospike.model.SimilarityFunction;
-import com.aerospike.util.VectorUtil;
+import io.github.roimenashe.model.SimilarityFunction;
+import io.github.roimenashe.util.VectorUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

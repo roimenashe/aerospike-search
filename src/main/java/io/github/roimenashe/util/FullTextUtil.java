@@ -1,4 +1,4 @@
-package com.aerospike.util;
+package io.github.roimenashe.util;
 
 public class FullTextUtil {
 
