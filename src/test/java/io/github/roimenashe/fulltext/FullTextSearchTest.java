@@ -53,6 +53,23 @@ public class FullTextSearchTest extends BaseTest {
     }
 
     @Test
+    void testFullTextSpecificBinsSearch() throws Exception {
+        try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
+            search.createFullTextIndex(NAMESPACE, SET);
+
+            List<Record> results = search.searchText(NAMESPACE, SET, "Lucene", 10);
+            // 2 matches for all bins
+            Assertions.assertEquals(2, results.size());
+
+            search.createFullTextIndex(NAMESPACE, SET, "body");
+
+            results = search.searchText(NAMESPACE, SET, "Java", 10);
+            // Only 1 match for body bin
+            Assertions.assertEquals(1, results.size());
+        }
+    }
+
+    @Test
     void testMultipleFullTextIndexesAndSearches_DisjointTerms() throws Exception {
         final String usersSet = "users";
         final String productsSet = "products";

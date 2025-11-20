@@ -39,9 +39,10 @@ public class AerospikeSearch implements AutoCloseable {
      *
      * @param namespace Aerospike namespace
      * @param set       Aerospike set
+     * @param binNames  Optional bins to create the index on. All bins will be included if not specified.
      */
-    public void createFullTextIndex(String namespace, String set) throws Exception {
-        fullTextIndexer.createFullTextIndex(namespace, set);
+    public void createFullTextIndex(String namespace, String set, String... binNames) throws Exception {
+        fullTextIndexer.createFullTextIndex(namespace, set, binNames);
     }
 
     /**

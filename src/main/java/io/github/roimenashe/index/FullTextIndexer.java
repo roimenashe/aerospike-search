@@ -31,7 +31,7 @@ public class FullTextIndexer implements AutoCloseable {
         this.analyzer = new StandardAnalyzer();
     }
 
-    public void createFullTextIndex(String namespace, String set) throws Exception {
+    public void createFullTextIndex(String namespace, String set, String... binNames) throws Exception {
         String key = FullTextUtil.getFullTextUniqueIndexName(namespace, set);
 
         Directory directory = directories.computeIfAbsent(key, k -> new ByteBuffersDirectory());
@@ -46,28 +46,53 @@ public class FullTextIndexer implements AutoCloseable {
         writer.deleteAll(); // clear old documents
         AtomicLong count = new AtomicLong();
 
-        aerospikeConnection.scan(namespace, set, (Key akey, Record record) -> {
-            Document doc = new Document();
-            String encodedId = Base64.getEncoder().encodeToString(akey.digest);
-            doc.add(new StringField("id", encodedId, Field.Store.YES));
+        if (binNames != null && binNames.length > 0) {
+            aerospikeConnection.scan(namespace, set, (Key akey, Record record) -> {
+                Document doc = new Document();
+                String encodedId = Base64.getEncoder().encodeToString(akey.digest);
+                doc.add(new StringField("id", encodedId, Field.Store.YES));
 
-            record.bins.forEach((binName, value) -> {
-                if (value instanceof String text) {
-                    if (!text.isEmpty()) {
-                        doc.add(new TextField(binName, text, Field.Store.YES));
+                record.bins.forEach((binName, value) -> {
+                    if (value instanceof String text) {
+                        if (!text.isEmpty()) {
+                            doc.add(new TextField(binName, text, Field.Store.YES));
+                        }
+                    }
+                });
+
+                synchronized (writer) {
+                    try {
+                        writer.addDocument(doc);
+                        count.incrementAndGet();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }, binNames);
+        } else {
+            aerospikeConnection.scan(namespace, set, (Key akey, Record record) -> {
+                Document doc = new Document();
+                String encodedId = Base64.getEncoder().encodeToString(akey.digest);
+                doc.add(new StringField("id", encodedId, Field.Store.YES));
+
+                record.bins.forEach((binName, value) -> {
+                    if (value instanceof String text) {
+                        if (!text.isEmpty()) {
+                            doc.add(new TextField(binName, text, Field.Store.YES));
+                        }
+                    }
+                });
+
+                synchronized (writer) {
+                    try {
+                        writer.addDocument(doc);
+                        count.incrementAndGet();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
                 }
             });
-
-            synchronized (writer) {
-                try {
-                    writer.addDocument(doc);
-                    count.incrementAndGet();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
+        }
 
         writer.commit();
         DirectoryReader reader = DirectoryReader.open(writer);
