@@ -10,7 +10,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <lucene.version>10.3.1</lucene.version>
+        <lucene.version>10.3.2</lucene.version>
         <aerospike-client.version>9.2.0</aerospike-client.version>
     </properties>
 
