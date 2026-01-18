@@ -35,9 +35,9 @@ public class HybridSearchService {
         normalizeScores(vectorResults);
 
         Map<String, Double> combined = new HashMap<>();
-        for (ScoredId r : textResults) combined.put(r.id, r.score * textWeight);
+        for (ScoredId r : textResults) combined.put(r.getId(), r.getScore() * textWeight);
         for (ScoredId r : vectorResults)
-            combined.merge(r.id, r.score * vectorWeight, Double::sum);
+            combined.merge(r.getId(), r.getScore() * vectorWeight, Double::sum);
 
         return combined.entrySet().stream()
                 .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
@@ -57,7 +57,7 @@ public class HybridSearchService {
 
     private void normalizeScores(List<ScoredId> results) {
         if (results.isEmpty()) return;
-        double max = results.stream().mapToDouble(r -> r.score).max().orElse(1.0);
-        for (ScoredId r : results) r.score /= max;
+        double max = results.stream().mapToDouble(ScoredId::getScore).max().orElse(1.0);
+        for (ScoredId r : results) r.setScore(r.getScore() / max);
     }
 }

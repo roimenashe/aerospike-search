@@ -1,11 +1,23 @@
 package io.github.roimenashe.model;
 
 public class ScoredId {
-    public final String id;
-    public double score;
+    private final String id;
+    private double score;
 
     public ScoredId(String id, double score) {
         this.id = id;
+        this.score = score;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public double getScore() {
+        return score;
+    }
+
+    public void setScore(double score) {
         this.score = score;
     }
 }
