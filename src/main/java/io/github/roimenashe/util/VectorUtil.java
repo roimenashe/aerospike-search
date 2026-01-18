@@ -35,7 +35,6 @@ public class VectorUtil {
             case DOT_PRODUCT -> VectorSimilarityFunction.DOT_PRODUCT;
             case COSINE -> VectorSimilarityFunction.COSINE;
             case EUCLIDEAN -> VectorSimilarityFunction.EUCLIDEAN;
-            default -> throw new IllegalArgumentException("Unsupported similarity function: " + similarityFunction);
         };
     }
 }

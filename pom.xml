@@ -12,6 +12,8 @@
         <java.version>21</java.version>
         <lucene.version>10.3.2</lucene.version>
         <aerospike-client.version>9.2.0</aerospike-client.version>
+        <slf4j.version>2.0.9</slf4j.version>
+        <junit.version>5.10.2</junit.version>
     </properties>
 
     <dependencies>
@@ -31,10 +33,24 @@
             <artifactId>aerospike-client-jdk21</artifactId>
             <version>${aerospike-client.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>RELEASE</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -44,6 +60,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
                 <configuration>
                     <release>${java.version}</release>
                 </configuration>

@@ -1,6 +1,7 @@
 package io.github.roimenashe.search;
 
 import io.github.roimenashe.index.VectorIndexer;
+import io.github.roimenashe.model.ScoredId;
 import io.github.roimenashe.model.SimilarityFunction;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.LeafReaderContext;
@@ -14,13 +15,14 @@ import java.util.List;
 
 public class VectorSearchService {
 
-    public final VectorIndexer indexer;
+    private final VectorIndexer indexer;
 
     public VectorSearchService(VectorIndexer indexer) {
         this.indexer = indexer;
     }
 
-    public List<String> searchVector(String namespace, String set, float[] queryVector, int k, SimilarityFunction similarityFunction) throws IOException {
+    public List<String> searchVector(String namespace, String set, float[] queryVector, int k,
+                                     SimilarityFunction similarityFunction) throws IOException {
         IndexSearcher indexSearcher = indexer.getIndexSearcher(namespace, set, similarityFunction);
         if (indexSearcher == null) {
             throw new IllegalStateException("Vector index not built for similarityFunction: " + similarityFunction);
@@ -31,18 +33,15 @@ public class VectorSearchService {
 
         List<String> results = new ArrayList<>();
         for (ScoreDoc sd : topDocs.scoreDocs) {
-            LeafReaderContext leaf = indexSearcher.getIndexReader().leaves().get(ReaderUtil.subIndex(sd.doc, indexSearcher.getIndexReader().leaves()));
-            StoredFields storedFields = leaf.reader().storedFields();
-            Document doc = storedFields.document(sd.doc - leaf.docBase);
+            Document doc = getDocument(indexSearcher, sd);
             results.add(doc.get("id"));
         }
 
         return results;
     }
 
-    public List<HybridSearchService.ScoredId> searchWithScores(String namespace, String set,
-                                                               float[] queryVector, int k,
-                                                               SimilarityFunction similarityFunction) throws IOException {
+    public List<ScoredId> searchWithScores(String namespace, String set, float[] queryVector, int k,
+                                           SimilarityFunction similarityFunction) throws IOException {
         IndexSearcher indexSearcher = indexer.getIndexSearcher(namespace, set, similarityFunction);
         if (indexSearcher == null) {
             throw new IllegalStateException("Vector index not built for similarityFunction: " + similarityFunction);
@@ -51,13 +50,18 @@ public class VectorSearchService {
         Query query = new KnnFloatVectorQuery("vector", queryVector, k);
         TopDocs topDocs = indexSearcher.search(query, k);
 
-        List<HybridSearchService.ScoredId> results = new ArrayList<>();
+        List<ScoredId> results = new ArrayList<>();
         for (ScoreDoc sd : topDocs.scoreDocs) {
-            LeafReaderContext leaf = indexSearcher.getIndexReader().leaves().get(ReaderUtil.subIndex(sd.doc, indexSearcher.getIndexReader().leaves()));
-            StoredFields storedFields = leaf.reader().storedFields();
-            Document doc = storedFields.document(sd.doc - leaf.docBase);
-            results.add(new HybridSearchService.ScoredId(doc.get("id"), sd.score));
+            Document doc = getDocument(indexSearcher, sd);
+            results.add(new ScoredId(doc.get("id"), sd.score));
         }
         return results;
+    }
+
+    private Document getDocument(IndexSearcher indexSearcher, ScoreDoc sd) throws IOException {
+        LeafReaderContext leaf = indexSearcher.getIndexReader().leaves()
+                .get(ReaderUtil.subIndex(sd.doc, indexSearcher.getIndexReader().leaves()));
+        StoredFields storedFields = leaf.reader().storedFields();
+        return storedFields.document(sd.doc - leaf.docBase);
     }
 }

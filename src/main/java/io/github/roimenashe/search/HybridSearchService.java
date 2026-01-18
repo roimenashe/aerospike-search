@@ -1,8 +1,11 @@
 package io.github.roimenashe.search;
 
+import io.github.roimenashe.model.ScoredId;
 import io.github.roimenashe.model.SimilarityFunction;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class HybridSearchService {
@@ -23,21 +26,19 @@ public class HybridSearchService {
                                      int limit,
                                      double textWeight,
                                      double vectorWeight) throws Exception {
-        // Run both searches
+        validateWeights(textWeight, vectorWeight);
+
         List<ScoredId> textResults = fullTextSearchService.searchWithScores(namespace, set, textQuery, limit);
         List<ScoredId> vectorResults = vectorService.searchWithScores(namespace, set, queryVector, limit, similarityFunction);
 
-        // Normalize each list’s scores to [0,1]
         normalizeScores(textResults);
         normalizeScores(vectorResults);
 
-        // Merge maps
         Map<String, Double> combined = new HashMap<>();
         for (ScoredId r : textResults) combined.put(r.id, r.score * textWeight);
         for (ScoredId r : vectorResults)
             combined.merge(r.id, r.score * vectorWeight, Double::sum);
 
-        // Sort by combined score
         return combined.entrySet().stream()
                 .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
                 .limit(limit)
@@ -45,19 +46,18 @@ public class HybridSearchService {
                 .collect(Collectors.toList());
     }
 
+    private void validateWeights(double textWeight, double vectorWeight) {
+        if (textWeight < 0 || vectorWeight < 0) {
+            throw new IllegalArgumentException("Weights must be non-negative");
+        }
+        if (Math.abs(textWeight + vectorWeight - 1.0) > 0.001) {
+            throw new IllegalArgumentException("Weights must sum to 1.0");
+        }
+    }
+
     private void normalizeScores(List<ScoredId> results) {
         if (results.isEmpty()) return;
         double max = results.stream().mapToDouble(r -> r.score).max().orElse(1.0);
         for (ScoredId r : results) r.score /= max;
-    }
-
-    public static class ScoredId {
-        public final String id;
-        public double score;
-
-        public ScoredId(String id, double score) {
-            this.id = id;
-            this.score = score;
-        }
     }
 }
