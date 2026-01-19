@@ -9,7 +9,7 @@ In-memory embedded full-text and vector search for [Aerospike](https://aerospike
 - **Full-Text Search** - Index and search text fields using Lucene's powerful text analysis
 - **Vector Search** - K-nearest neighbor (KNN) search with customizable similarity functions
 - **Hybrid Search** - Combine full-text and vector search with configurable weights
-- **Zero Infrastructure** - Runs embedded in your JVM, no external services required
+- **Zero Infrastructure** - Runs embedded in your application, no external services required
 - **Simple API** - Get started with just a few lines of code
 
 ## Requirements
@@ -124,4 +124,4 @@ try (AerospikeSearch search = new AerospikeSearch(aerospikeClient)) {
 
 For large-scale or distributed search use cases, consider using the
 [Aerospike Elasticsearch Connector](https://aerospike.com/docs/connectors/elasticsearch/), which provides scalable
-integration with Elasticsearch for enterprise-grade indexing and querying.
+integration with [Elasticsearch](https://www.elastic.co/elasticsearch) for enterprise-grade indexing and querying.
